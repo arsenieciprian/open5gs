@@ -1521,6 +1521,7 @@ static int hss_ogs_diam_cx_sar_cb(struct msg **msg, struct avp *avp,
         if (public_identity) ogs_free(public_identity);
         if (server_name) ogs_free(server_name);
         if (visited_network_identifier) ogs_free(visited_network_identifier);
+        if (ims_data.display_name) ogs_free(ims_data.display_name);
 
         return 0;
     }
@@ -1565,6 +1566,7 @@ out:
     if (public_identity) ogs_free(public_identity);
     if (server_name) ogs_free(server_name);
     if (visited_network_identifier) ogs_free(visited_network_identifier);
+    if (ims_data.display_name) ogs_free(ims_data.display_name);
 
     return 0;
 }

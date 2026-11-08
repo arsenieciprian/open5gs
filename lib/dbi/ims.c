@@ -191,6 +191,20 @@ int ogs_dbi_ims_data(char *supi, ogs_ims_data_t *ims_data)
                 }
             }
             ims_data->num_of_msisdn = msisdn_index;
+        } else if (!strcmp(key, "display_name") &&
+            BSON_ITER_HOLDS_UTF8(&iter)) {
+            uint32_t n;
+            utf8 = bson_iter_utf8(&iter, &length);
+            n = ogs_min(length, OGS_MAX_IMS_DISPLAY_NAME_LEN);
+            /* cut a longer one on a UTF-8 character boundary */
+            while (n < length && n > 0 && (utf8[n] & 0xC0) == 0x80)
+                n--;
+            if (n > 0) {
+                if (ims_data->display_name)
+                    ogs_free(ims_data->display_name);
+                ims_data->display_name = ogs_strndup(utf8, n);
+                ogs_assert(ims_data->display_name);
+            }
         } else if (!strcmp(key, "ifc") &&
             BSON_ITER_HOLDS_ARRAY(&iter)) {
             int ifc_index = 0;

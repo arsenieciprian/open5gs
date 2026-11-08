@@ -1175,6 +1175,11 @@ void ogs_ims_data_free(ogs_ims_data_t *ims_data)
 
     ogs_assert(ims_data);
 
+    if (ims_data->display_name) {
+        ogs_free(ims_data->display_name);
+        ims_data->display_name = NULL;
+    }
+
     for (i = 0; i < ims_data->num_of_media_component; i++) {
         ogs_media_component_t *media_component = &ims_data->media_component[i];
 

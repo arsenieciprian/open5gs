@@ -1218,6 +1218,7 @@ typedef struct ogs_ifc_s {
     ogs_application_server_t application_server;
 } ogs_ifc_t;
 
+#define OGS_MAX_IMS_DISPLAY_NAME_LEN 128
 typedef struct ogs_ims_data_s {
     int num_of_msisdn;
     struct {
@@ -1232,6 +1233,10 @@ typedef struct ogs_ims_data_s {
 
     int num_of_ifc;
     ogs_ifc_t ifc[OGS_MAX_NUM_OF_IFC];
+
+    /* Display name of the public user identities (TS 29.228 Annex B,
+     * DisplayName), sent in the Cx user data; NULL if none */
+    char *display_name;
 } ogs_ims_data_t;
 
 void ogs_ims_data_free(ogs_ims_data_t *ims_data);

@@ -930,6 +930,32 @@ void hss_cx_set_server_name(
     ogs_thread_mutex_unlock(&self.cx_lock);
 }
 
+/* text as XML character data: & < > " ' escaped */
+static char *xml_escape(const char *in)
+{
+    size_t len = 0;
+    const char *p;
+    char *out, *q;
+
+    for (p = in; *p; p++)
+        len += (*p == '&') ? 5 : (*p == '<' || *p == '>') ? 4 :
+               (*p == '"' || *p == '\'') ? 6 : 1;
+    out = ogs_malloc(len + 1);
+    ogs_assert(out);
+    for (p = in, q = out; *p; p++) {
+        switch (*p) {
+        case '&': memcpy(q, "&amp;", 5); q += 5; break;
+        case '<': memcpy(q, "&lt;", 4); q += 4; break;
+        case '>': memcpy(q, "&gt;", 4); q += 4; break;
+        case '"': memcpy(q, "&quot;", 6); q += 6; break;
+        case '\'': memcpy(q, "&apos;", 6); q += 6; break;
+        default: *q++ = *p;
+        }
+    }
+    *q = 0;
+    return out;
+}
+
 char *hss_cx_download_user_data(
         char *user_name, char *visited_network_identifier,
         ogs_ims_data_t *ims_data)
@@ -942,6 +968,7 @@ char *hss_cx_download_user_data(
     bool barring_indication_presence = true;
     int i, n, m;
     const char *home_domain = NULL;
+    char *display_name = NULL;
 
     ogs_assert(user_name);
     ogs_assert(visited_network_identifier);
@@ -977,6 +1004,9 @@ char *hss_cx_download_user_data(
 
 
     /* Generate XML Data */
+
+    if (ims_data->display_name)
+        display_name = xml_escape(ims_data->display_name);
 
     ogs_thread_mutex_lock(&self.cx_lock);
 
@@ -1031,6 +1061,22 @@ char *hss_cx_download_user_data(
                             "0",
                             ogs_diam_cx_xml_identity_type_e);
                 ogs_assert(user_data);
+
+                /*
+                 * DisplayName (TS 29.228 Annex B, CxDataType Rel-8): in
+                 * the extension of the public identity extension; the
+                 * S-CSCF gives it in P-Associated-URI (TS 24.229
+                 * 5.4.1.2.2F) and the P-CSCF in P-Asserted-Identity
+                 */
+                if (display_name) {
+                    user_data = ogs_mstrcatf(user_data, "%s%s%s%s%s",
+                                ogs_diam_cx_xml_extension_s,
+                                ogs_diam_cx_xml_display_name_s,
+                                display_name,
+                                ogs_diam_cx_xml_display_name_e,
+                                ogs_diam_cx_xml_extension_e);
+                    ogs_assert(user_data);
+                }
 
               user_data = ogs_mstrcatf(user_data, "%s",
                           ogs_diam_cx_xml_extension_e);
@@ -1413,6 +1459,9 @@ char *hss_cx_download_user_data(
     ogs_assert(user_data);
 
     ogs_thread_mutex_unlock(&self.cx_lock);
+
+    if (display_name)
+        ogs_free(display_name);
 
     return user_data;
 }
