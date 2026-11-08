@@ -1174,6 +1174,30 @@ void ogs_ims_data_free(ogs_ims_data_t *ims_data)
 
     ogs_assert(ims_data);
 
+    for (i = 0; i < ims_data->num_of_ifc; i++) {
+        ogs_ifc_t *ifc = &ims_data->ifc[i];
+
+        for (j = 0; j < ifc->trigger_point.num_of_spt; j++) {
+            ogs_spt_t *spt = &ifc->trigger_point.spt[j];
+
+            if (spt->method)
+                ogs_free((char *)spt->method);
+            if (spt->header)
+                ogs_free((char *)spt->header);
+            if (spt->header_content)
+                ogs_free((char *)spt->header_content);
+            if (spt->sdp_line)
+                ogs_free((char *)spt->sdp_line);
+            if (spt->sdp_line_content)
+                ogs_free((char *)spt->sdp_line_content);
+            if (spt->request_uri)
+                ogs_free((char *)spt->request_uri);
+        }
+        if (ifc->application_server.server_name)
+            ogs_free((char *)ifc->application_server.server_name);
+    }
+    ims_data->num_of_ifc = 0;
+
     for (i = 0; i < ims_data->num_of_media_component; i++) {
         ogs_media_component_t *media_component = &ims_data->media_component[i];
 
